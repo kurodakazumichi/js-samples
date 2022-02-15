@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DivArt-image</title>
+  <script src="divart.js"></script>
+</head>
+<body>
+  <div id="canvas"></div>
+  <button id="toImage">画像にする</button>
+
+  <div>
+    <img id="img" width="400px">
+  </div>
+
+  <script>
+    const SIZE = 20;
+    const da = new DivArt("canvas", SIZE, SIZE, true);
+
+    let timer = 0;
+
+    document.getElementById("toImage").addEventListener("click", () => {
+      document.getElementById('img').src = da.toDataURL();
+    })    
+
+    const animate = () => 
+    {
+      requestAnimationFrame(animate);
+
+      da.draw((x, y) => {
+        const d = Math.sqrt(x * x + y * y);          // 真ん中を原点(0, 0)としたとき、原点とdiv(x, y)の距離
+        const c = 1 - Math.abs(d - Math.sin(timer)); // 原点からの距離で色を決める
+        return [c, c, c];
+      })
+
+      timer += 0.01;
+    }
+    animate();
+    
+  </script>
+</body>
+</html>

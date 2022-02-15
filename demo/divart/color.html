@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DivArt-color</title>
+  <script src="divart.js"></script>
+</head>
+<body>
+  <div id="canvas"></div>
+
+  <script>
+    const SIZE = 20;
+    const da = new DivArt("canvas", SIZE, SIZE);
+
+    let timer = 0;
+
+    const animate = () => 
+    {
+      requestAnimationFrame(animate);
+
+      da.draw((x, y) => {
+        return [Math.abs(x), Math.abs(Math.sin(timer)), Math.abs(y)];
+      })
+
+      timer += 0.01;
+    }
+    animate();
+    
+  </script>
+</body>
+</html>

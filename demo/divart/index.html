@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>div art</title>
+  <script src="divart.js"></script>
+</head>
+<body>
+  <div id="canvas"></div>
+  <button id="b_r">red</button>
+  <button id="b_g">green</button>
+  <button id="b_b">blue</button>
+
+  <ul>
+    <li><a href="./color.html">color</a></li>
+    <li><a href="./circle.html">circle</a></li>
+    <li><a href="./image.html">image</a></li>
+  </ul>
+
+  <script>
+    const SIZE = 20;
+    const da = new DivArt("canvas", SIZE, SIZE);
+    const red = [1, 0, 0];
+
+    da.clear(red);
+
+    document.getElementById("b_g").addEventListener("click", (e) => {
+      da.clear(red);
+    })
+
+    document.getElementById("b_g").addEventListener("click", (e) => {
+      da.clear([0, 1, 0]);
+    })
+
+    document.getElementById("b_b").addEventListener("click", (e) => {
+      da.clear([0, 0,1]);
+    })
+  </script>
+</body>
+</html>
