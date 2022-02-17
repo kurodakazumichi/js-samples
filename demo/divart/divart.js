@@ -105,8 +105,12 @@ class DivArt
     for(let i = 0; i < this.size; ++i) {
 
       // iをx,y座標に変換し、中心から-1.0 ～ 1.0になるように計算
-      let x = (i % cw) / half - 1.0;
-      let y = (i / cw) / half - 1.0;
+      //let x = (i % cw) / half - 1.0;
+      //let y = (i / cw) / half - 1.0;
+      let x = (i % cw) + 0.5 - half;
+      let y = (i / cw) + 0.5 - half;
+      x = x / half;
+      y = y / half;
 
       this.pixel(i, frag(x, -y));
     }

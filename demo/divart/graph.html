@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DivArt-graph</title>
+  <script src="divart.js"></script>
+</head>
+<body>
+  <div id="canvas"></div>
+
+  <button id="b_linear">一次関数</button>
+  <button id="b_quad">二次関数</button>
+  <button id="b_sin">sin</button>
+
+  <script>
+    const SIZE = 20;
+    const da = new DivArt("canvas", SIZE, SIZE);
+    let timer = 0;
+
+    // 一次関数
+    const linear = () => 
+    {
+      // y = ax + bの陰関数
+      const f = (y, x) => {
+        const a = Math.sin(timer) * 2.0; // 傾きは-2.0~2.0で変化
+        const b = 0; // 切片は0
+        return y - (a * x) + b;
+      }
+
+      da.draw((x, y) => {
+        const c = 1.0 -  Math.abs(f(y, x));
+        return [c, c, c];
+      })
+    }
+
+    // 二次関数
+    const quad = () => 
+    {
+      // y = a(x-p)^2 + qの陰関数
+      const f = (y, x) => {
+        const a = Math.sin(timer); // 傾きは-1.0~1.0で変化
+        // p,qはグラフの頂点を表す、半径0.5の円軌道を動くようにする
+        const p = Math.cos(timer) * 0.5;
+        const q = Math.sin(timer) * 0.5;
+        return y - (a * (x - p) * (x - p)) + q;
+      }
+
+      da.draw((x, y) => {
+        const c = 1.0 -  Math.abs(f(y, x));
+        return [c, c, c];
+      })
+    }
+
+    // sin関数
+    const sin = () => {
+      const f = (y, x) => {
+        const cycle = Math.PI;
+        return y - Math.sin((x + timer) * cycle);
+      }
+
+      da.draw((x, y) => {
+        const c = 1.0 -  Math.abs(f(y, x));
+        return [c, c, c];
+      })
+    }
+
+    let draw = linear;
+
+    const animate = () => 
+    {
+      requestAnimationFrame(animate);
+
+      draw();
+
+      timer += 0.01;
+    }
+    animate();
+
+    // ボタン押した時に描画関数を切替
+    document.getElementById("b_linear").addEventListener("click", () => {
+      draw = linear;
+    })
+
+    document.getElementById("b_quad").addEventListener("click", () => {
+      draw = quad;
+    })
+
+    document.getElementById("b_sin").addEventListener("click", () => {
+      draw = sin;
+    });
+    
+  </script>
+</body>
+</html>
