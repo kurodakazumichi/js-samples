@@ -112,7 +112,7 @@ class DivArt
       x = x / half;
       y = y / half;
 
-      this.pixel(i, frag(x, -y));
+      this.pixel(i, frag(x, -y, i));
     }
   }
 

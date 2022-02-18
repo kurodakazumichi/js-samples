@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DivArt-ripple</title>
+  <script src="divart.js"></script>
+</head>
+<body>
+  <div id="canvas"></div>
+  波の速度：<input type="range" id="p_s2" value="0.01" min="0.01" max="0.1" step="0.01"><br>
+  減衰係数：<input type="range" id="p_decay" value="0.97" min="0" max="0.999" step="0.01"><br>
+  
+  <script>
+    // パラメータ
+    let S2    = 0.01;   // 波の伝番速度
+    let DECAY = 0.97; // 減衰係数
+
+    document.getElementById("p_s2").addEventListener("change", (e) => {
+      S2 = e.target.value;
+    });
+
+    document.getElementById("p_decay").addEventListener("change", (e) => {
+      DECAY = e.target.value;
+    });
+
+
+    const SIZE = 40;
+    const da = new DivArt("canvas", SIZE, 10);
+
+    // 波の計算結果を保持する変数
+    const v = []; // 波の高さの変化する速度
+    const u = []; // 波の高さ
+
+    for(let i = 0; i < SIZE * SIZE; ++i) {
+      v[i] = u[i] = 0;
+    }
+    
+    // bufに対するget,set
+    function get(buf, x, y) 
+    {
+      if (x < 0 || SIZE <= x) return 0;
+      if (y < 0 || SIZE <= y) return 0;
+
+      const v = buf[y * SIZE + x];
+      return v;
+    }
+
+    function set(buf, x, y, value) 
+    {
+      if (x < 0 || SIZE <= x) return;
+      if (y < 0 || SIZE <= y) return;
+
+      buf[y * SIZE + x] = value;
+    }
+
+    // 波動方程式で波の伝番シミュレーション
+    const animate = () => 
+    {
+      requestAnimationFrame(animate);
+
+      // 波の計算
+      for(let y = 0; y < SIZE; ++y) {
+        for (let x = 0; x < SIZE; ++x) {
+          // 波の加速度
+          let accel = get(u, x - 1, y)
+                      + get(u, x + 1, y)
+                      + get(u, x, y - 1)
+                      + get(u, x, y + 1)
+                      - get(u, x, y) * 4;
+          
+          accel *= S2;
+
+          // 波の速度を更新
+          const velocity = (get(v, x, y) + accel) * DECAY;
+          set(v, x, y, velocity);
+        }
+      }
+
+      da.draw((x, y, i) => 
+      {
+        // 波の高さを更新
+        x = i % SIZE;
+        y = parseInt(i / SIZE);
+        const h = get(u, x, y) + get(v, x, y);
+        set(u, x, y, h);
+
+        return [0, h, h * Math.random()];
+      })
+    }
+    animate();
+
+    da.vram.map((div, i) => {
+      div.addEventListener("click", () => {
+        u[i] = 10.0;
+      });
+    })
+    
+    
+  </script>
+</body>
+</html>
