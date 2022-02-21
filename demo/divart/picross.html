@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DivArt-picross</title>
+  <script src="divart.js"></script>
+  <style>
+    #row div {
+      height:30px;
+      text-align: right;
+      border:1px solid #999;
+      box-sizing: border-box;
+      line-height: 30px;
+      padding:0 10px;
+    }
+
+    #col {
+      display: flex;
+    }
+
+    #col div {
+      width:30px;
+      border:1px solid #999;
+      box-sizing: border-box;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <table>
+    <tr>
+      <td></td>
+      <td id="col"></td>
+    </tr>
+    <tr>
+      <td id="row"></td>
+      <td><div id="canvas"></div></td>
+    </tr>
+  </table>
+  
+  <button id="b_open">Open</button>
+  <button id="b_data0">STAGE1</button>
+  <button id="b_data1">STAGE2</button>
+
+  <script>
+    const SIZE = 10; // ピクロスのサイズ、10x10にする
+    const WIDTH = 30;
+    const da = new DivArt("canvas", SIZE, WIDTH);
+
+    //-------------------------------------------------------------------------
+    // ピクロスデータ(10x10)
+    const datas = [
+      [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+        0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
+        0, 1, 0, 1, 0, 0, 1, 0, 1, 0,
+        0, 1, 0, 1, 0, 0, 1, 0, 1, 0,
+        0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
+        0, 1, 0, 1, 1, 1, 1, 0, 1, 0,
+        0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
+        0, 1, 1, 1, 1, 1, 1, 1, 1, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      ],
+      [
+        0, 0, 0, 0, 1, 1, 0, 0, 0, 0,
+        0, 0, 1, 1, 0, 0, 1, 1, 0, 0,
+        0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
+        1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+        1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+        1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+        0, 1, 0, 1, 0, 0, 1, 0, 1, 0,
+        0, 1, 0, 1, 0, 0, 1, 0, 1, 0,
+        0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
+        0, 0, 1, 1, 1, 1, 1, 1, 0, 0,
+      ],
+    ];
+
+    //-------------------------------------------------------------------------
+    // ゲーム中のデータ
+    const game = {
+      data: datas[0],
+      open: [],
+      hints:{ row:[], col:[] },
+    }
+
+    //-------------------------------------------------------------------------
+    // ゲーム関連の関数
+
+    // openフラグをクリア
+    const clear_open = (game) => 
+    {
+      const { open } = game;
+      
+      open.length = 0;
+
+      for(let i = 0; i < SIZE * SIZE; ++i) {
+        open.push(0);
+      }
+    }
+
+    // (正解の場所を)全て開ける
+    const full_open = (game) => 
+    {
+      const { data, open } = game;
+
+      for(let i = 0; i < SIZE * SIZE; ++i) {
+        open[i] = data[i];
+      }
+    }
+
+    // 行ヒントデータ生成
+    const make_hints_row = (game) => 
+    {
+      const { data, hints } = game;
+      hints.row.length = 0;
+
+      for(let i = 0; i < SIZE; ++i) {
+
+        let arrIndex = 0;
+        let arr = [];
+
+        for(let x = 0; x < SIZE; ++x) {
+
+          const y = i;
+          const d = data[y*SIZE+x];
+          
+          if(d == 0) {
+
+            if(arr[arrIndex]) {
+              arrIndex++;
+            }
+
+            continue;
+          }
+
+          if(arr[arrIndex]) {
+            arr[arrIndex] += 1;
+          } else {
+            arr.push(1);
+          }
+        }
+
+        hints.row.push(arr);
+      }
+    }
+
+    // 列ヒントデータ生成
+    const make_hints_col = (game) => {
+      const { data, hints } = game;
+      hints.col.length = 0;
+
+      for(let i = 0; i < SIZE; ++i) {
+
+        let arrIndex = 0;
+        let arr = [];
+
+        for(let y = 0; y < SIZE; ++y) {
+
+          const x = i;
+          const d = data[y*SIZE+x];
+          
+          if(d == 0) {
+
+            if(arr[arrIndex]) {
+              arrIndex++;
+            }
+
+            continue;
+          }
+
+          if(arr[arrIndex]) {
+            arr[arrIndex] += 1;
+          } else {
+            arr.push(1);
+          }
+        }
+
+        hints.col.push(arr);
+      }
+    }
+
+    // 描画
+    const draw = (game) =>
+    {
+      const { open } = game;
+
+      for(let i = 0; i < SIZE * SIZE; ++i) 
+      {  
+        if(open[i] === 1) {
+          da.pixel(i, [1, 1, 1]);
+        } else {
+          da.pixel(i, [0, 0, 0]);
+        }
+      }
+    }
+
+    // ゲームデータを初期化
+    const init_game_data = (data) => {
+      game.data = data;
+      clear_open(game);
+      make_hints_row(game);
+      make_hints_col(game);
+    }
+    
+    //-------------------------------------------------------------------------
+    // DOM関連
+
+    const dom = {
+      row: document.getElementById("row"),
+      col: document.getElementById("col"),
+    }
+
+    // ヒント行列をリセット
+    const reset_dom = () => {
+      dom.row.innerHTML = "";
+      dom.col.innerHTML = "";
+    }
+
+    // ヒント行列DOMを生成
+    const make_hint_doms = (game) => 
+    {
+      reset_dom();
+
+      const { hints } = game;
+      
+      for(let i = 0; i < SIZE; ++i) 
+      {
+        const div = document.createElement("div");
+        const text = hints.row[i].toString();
+        div.innerText = text? text : "0";
+        dom.row.appendChild(div);
+      }
+
+      for(let i = 0; i < SIZE; ++i) 
+      {
+        const div = document.createElement("div");
+        const text = hints.col[i].join("<br>");
+        div.innerHTML = text? text : "0";
+        dom.col.appendChild(div);
+      }
+    }
+
+    //-------------------------------------------------------------------------
+    // ゲーム開始
+    const start_game = (data) => {
+      init_game_data(data);
+      make_hint_doms(game);
+      draw(game);
+    }
+
+    //-------------------------------------------------------------------------
+    // イベント関連
+    da.vram.map((div, i) => 
+    {
+      const { open } = game;
+
+      div.addEventListener("click", (e) => 
+      {
+        open[i] = (open[i])? 0:1;
+        draw(game);
+      })
+    });
+
+    document.getElementById("b_open").addEventListener("click", () => {
+      full_open(game);
+      draw(game);
+    });
+
+    document.getElementById("b_data0").addEventListener("click", () => {
+      start_game(datas[0]);
+    })
+
+    document.getElementById("b_data1").addEventListener("click", () => {
+      start_game(datas[1]);
+    })
+
+    start_game(datas[0]);
+
+  </script>
+</body>
+</html>
