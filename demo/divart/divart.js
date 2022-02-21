@@ -15,13 +15,13 @@ class DivArt
     this.size = cw * cw;                     // divの総数
     this.vram = [];                          // vramといいつつ、ただのdivの配列
 
-    this.canvas = document.createElement('canvas');
-    this.canvas.width = cw;
-    this.canvas.height = cw;
-    this.ctx = this.canvas.getContext("2d");
-
     // divから画像を作る機能が有効な場合のみ作成する
     if (enableMakeImage) {
+      this.canvas = document.createElement('canvas');
+      this.canvas.width = cw;
+      this.canvas.height = cw;
+      this.ctx = this.canvas.getContext("2d");
+
       this.img = new ImageData(cw, cw);        // 画像
     }
 
