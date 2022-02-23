@@ -113,75 +113,59 @@
       }
     }
 
-    // 行ヒントデータ生成
-    const make_hints_row = (game) => 
+    // ピクロスのデータからヒントデータを作成する
+    const make_hints = (type, data) => 
     {
-      const { data, hints } = game;
-      hints.row.length = 0;
+      hints = [];
 
-      for(let i = 0; i < SIZE; ++i) {
+      const MODE_SEARCH = 0;
+      const MODE_COUNT  = 1;
 
-        let arrIndex = 0;
-        let arr = [];
+      const state = {
+        mode : MODE_SEARCH,
+        count: 0,
+      }
 
-        for(let x = 0; x < SIZE; ++x) {
+      for(let y = 0; y < SIZE; ++y) 
+      {
+        const hint = [];
 
-          const y = i;
-          const d = data[y*SIZE+x];
-          
-          if(d == 0) {
+        for(let x = 0; x < SIZE; ++x) 
+        {
+          // 行と列でデータの取得位置を入替
+          const d = (type === "row")? data[y*SIZE+x] : data[x*SIZE+y];
 
-            if(arr[arrIndex]) {
-              arrIndex++;
+          switch(state.mode) 
+          {
+            // 1が出てくるのを探すフェーズ
+            case MODE_SEARCH: {
+              if (d == 1) {
+                state.mode = 1;
+                state.count = 1;
+              }
+              break;
             }
 
-            continue;
-          }
-
-          if(arr[arrIndex]) {
-            arr[arrIndex] += 1;
-          } else {
-            arr.push(1);
-          }
-        }
-
-        hints.row.push(arr);
-      }
-    }
-
-    // 列ヒントデータ生成
-    const make_hints_col = (game) => {
-      const { data, hints } = game;
-      hints.col.length = 0;
-
-      for(let i = 0; i < SIZE; ++i) {
-
-        let arrIndex = 0;
-        let arr = [];
-
-        for(let y = 0; y < SIZE; ++y) {
-
-          const x = i;
-          const d = data[y*SIZE+x];
-          
-          if(d == 0) {
-
-            if(arr[arrIndex]) {
-              arrIndex++;
+            // 0が出てくるまでカウントアップするフェーズ
+            case MODE_COUNT: {
+              if (d == 1) {
+                state.count++;
+              }
+              if (d == 0) {
+                state.mode = 0;
+                hint.push(state.count);
+              }
+              break;
             }
-
-            continue;
           }
 
-          if(arr[arrIndex]) {
-            arr[arrIndex] += 1;
-          } else {
-            arr.push(1);
-          }
         }
 
-        hints.col.push(arr);
+        // 1行、または1列終わるたびにヒントに追加する
+        hints.push(hint);
       }
+
+      return hints;
     }
 
     // 描画
@@ -203,8 +187,8 @@
     const init_game_data = (data) => {
       game.data = data;
       clear_open(game);
-      make_hints_row(game);
-      make_hints_col(game);
+      game.hints.row = make_hints("row", data);
+      game.hints.col = make_hints("col", data);
     }
     
     //-------------------------------------------------------------------------
