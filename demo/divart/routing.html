@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DivArt-routing</title>
+  <script src="divart.js"></script>
+  <style>
+    #message {
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas"></div>
+  <div id="message"></div>
+  スピード：<input id="p_speed" type="range" value="30" min="10" max="1000"><br>
+  <button id="b_start">探索開始</button>
+  <button id="b_change">配置換え</button>
+  
+  <script>
+    //-------------------------------------------------------------------------
+    // divart初期化
+    //-------------------------------------------------------------------------
+    const SIZE = 20;
+    const da = new DivArt("canvas", SIZE, SIZE);
+
+    //-------------------------------------------------------------------------
+    // データ
+    //-------------------------------------------------------------------------
+    const STAGE = [
+      1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+      1,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,
+      1,0,1,1,1,1,1,1,0,1,0,1,0,0,0,0,0,0,0,1,
+      1,0,0,0,0,1,0,1,0,1,0,1,0,1,1,1,1,1,0,1,
+      1,0,0,0,0,1,0,1,0,1,0,1,0,0,0,0,1,0,0,1,
+      1,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,1,0,0,1,
+      1,0,1,1,1,0,1,1,1,1,1,1,1,1,0,0,1,0,0,1,
+      1,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,
+      1,0,1,0,0,0,0,0,0,1,1,1,0,1,0,0,1,0,0,1,
+      1,1,1,1,1,1,1,1,1,1,0,1,0,1,0,0,1,0,0,1,
+      1,0,0,0,0,0,0,0,0,1,0,1,0,1,0,0,1,0,0,1,
+      1,0,0,0,0,0,0,0,0,1,0,1,0,1,1,1,1,1,0,1,
+      1,0,1,1,1,1,1,1,1,1,0,1,0,0,0,1,0,1,0,1,
+      1,0,0,1,0,0,0,0,0,0,0,1,1,1,0,1,0,1,0,1,
+      1,0,0,1,0,1,1,1,1,1,0,0,0,0,0,1,0,1,0,1,
+      1,0,0,1,0,1,0,0,0,1,0,1,1,1,1,1,0,1,0,1,
+      1,0,0,1,0,1,0,1,0,1,0,1,0,0,0,1,0,1,0,1,
+      1,0,0,1,0,1,1,1,0,1,0,1,0,0,0,1,0,1,0,1,
+      1,0,0,0,0,0,0,0,0,1,0,1,0,0,0,1,0,0,0,1,
+      1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,      
+    ];
+
+    //-------------------------------------------------------------------------
+    // 状態
+    //-------------------------------------------------------------------------
+    const state = {
+      start: 0,
+      goal : 0,
+      checks: [],
+      steps : [],
+      ok    : false,
+      animIndex: 0,
+      animSpeed: 30,
+    };
+
+    //-------------------------------------------------------------------------
+    // 関数
+    //-------------------------------------------------------------------------    
+    const init = () => 
+    {
+      state.counter = 0;
+      state.ok = false;
+      state.steps.length = 0;
+
+      // checksを初期化
+      state.checks.length = 0;
+      for(let i = 0; i < SIZE * SIZE; ++i) {
+        state.checks.push(false);
+      }
+
+      // startとgoalをランダムに決める
+      const candidate = [];
+
+      STAGE.map((v, i) => {
+        if (v === 0) candidate.push(i);
+      })
+
+      // シャッフル
+      candidate.sort(() => Math.random() - 0.5);
+
+      state.start = candidate[0];
+      state.goal  = candidate[1];
+
+    }
+
+    // 描画
+    const draw = () => {
+
+      for(let i = 0; i < SIZE*SIZE; ++i) 
+      {
+        let color;
+
+        switch(i) {
+          case state.start: color = [0, 1, 1]; break;
+          case state.goal : color = [1, 0, 0]; break;
+          default: 
+            if (STAGE[i] === 1) {
+              color = [0, 0, 0];
+            } else {
+              color = state.checks[i]? [0.4, 0.4, 0.4] : [1, 1, 1];
+            }
+            break;
+        }
+
+        da.pixel(i, color);
+      }
+    } 
+
+    const scan = (x, y) => 
+    {
+      let index = y * SIZE + x;
+
+      state.checks[index] = true;
+
+      // 探索した箇所を配列に追加
+      if (state.start != index && state.goal != index && STAGE[index] !== 1) {
+        state.steps.push(index);
+      }
+
+      // もうゴールに付けるとわかった
+      if (state.ok) { return; }
+      
+      // ゴールについた
+      if (state.goal === index) {
+        state.ok = true;
+        return true;
+      }
+
+      // 左
+      index = y * SIZE + (x - 1);
+      if (0 < x && STAGE[index] !== 1 && state.checks[index] == false) {
+        if (scan(x - 1, y)) return true;
+      }
+
+      // 右
+      index = y * SIZE + (x + 1);
+      if (x < SIZE - 1 && STAGE[index] !== 1 && state.checks[index] == false) {
+        if (scan(x + 1, y)) return true;
+      }
+
+      // 上
+      index = (y - 1) * SIZE + x;
+      if (0 < y && STAGE[index] !== 1 && state.checks[index] == false) {
+        if (scan(x, y - 1)) return true;
+      }
+
+      // 下
+      index = (y + 1) * SIZE + x;
+      if (y < SIZE && STAGE[index] !== 1 && state.checks[index] == false) {
+        if (scan(x, y + 1)) return true;
+      }
+
+      return false;
+    }
+
+    const animate = () => {
+
+      const { steps, animIndex } = state;
+
+      da.pixel(steps[animIndex], [0.5, 0.5, 0.5]);
+      state.animIndex++;
+
+      if (state.animIndex < state.steps.length) {
+        setTimeout(animate, state.animSpeed);
+      } else {
+        setButtonDisabled(false);
+        setMessage(state.ok? "到達可能" : "到達不可能");
+      }
+      
+    }
+
+    const setMessage = (msg) => {
+      document.getElementById("message").innerText = msg;
+    }
+
+    const setButtonDisabled = (disabled) => {
+      document.getElementById("b_start").disabled = disabled;
+      document.getElementById("b_change").disabled = disabled;
+    }
+
+    //-------------------------------------------------------------------------
+    // イベント
+    //-------------------------------------------------------------------------    
+    window.onload = () => {
+      init();
+      draw();
+    }
+
+    document.getElementById("b_start").addEventListener("click", (e) => 
+    {
+      // 探索
+      scan(state.start % SIZE, parseInt(state.start / SIZE));
+
+      // アニメーションリセット
+      state.steps.map((i) => {
+        da.pixel(i, [1, 1, 1]);
+      })
+      state.animIndex = 0;
+
+      // UIリセット
+      setMessage("");
+      setButtonDisabled(true);
+
+      // アニメーション開始
+      animate();
+    })
+
+    document.getElementById("b_change").addEventListener("click", (e) => {
+      setMessage("");
+      init();
+      draw();
+    })
+
+    document.getElementById("p_speed").addEventListener("change", (e) => {
+      state.animSpeed = e.target.value;
+    });
+    
+  </script>
+</body>
+</html>
