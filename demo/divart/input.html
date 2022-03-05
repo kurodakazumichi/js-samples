@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DivArt-input</title>
+  <script src="divart.js"></script>
+  <script src="input.js"></script>
+  <style>
+    #message {
+      font-size: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas"></div>
+  <script>
+    //-------------------------------------------------------------------------
+    // divart初期化
+    //-------------------------------------------------------------------------
+    const SIZE = 20;
+    const da = new DivArt("canvas", SIZE, SIZE);
+
+    //-------------------------------------------------------------------------
+    // 状態
+    //-------------------------------------------------------------------------    
+    const state = {
+      position: 0
+    }
+
+    //-------------------------------------------------------------------------
+    // 関数
+    //-------------------------------------------------------------------------
+    const draw = () => {
+      da.draw((x, y, i) => {
+        return (i == state.position)? [1, 1, 1] : [0, 0, 0];
+      })
+    }
+
+    //-------------------------------------------------------------------------
+    // キー入力
+    //-------------------------------------------------------------------------
+    Input.setup((e) => {
+      
+      switch(e.code) {
+        case "ArrowDown" : state.position += 20; break;
+        case "ArrowUp"   : state.position -= 20; break;
+        case "ArrowRight": state.position += 1; break;
+        case "ArrowLeft" : state.position -= 1; break;
+      }
+
+      state.position = Math.max(0, state.position);
+      state.position = Math.min(SIZE * SIZE - 1, state.position);
+
+      draw();
+    })
+
+    window.onload = () => { draw(); }
+  </script>
+</body>
+</html>
