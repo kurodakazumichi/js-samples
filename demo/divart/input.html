@@ -39,7 +39,7 @@
     //-------------------------------------------------------------------------
     // キー入力
     //-------------------------------------------------------------------------
-    Input.setup((e) => {
+    Input.addEventKewDown((e) => {
       
       switch(e.code) {
         case "ArrowDown" : state.position += 20; break;
@@ -53,8 +53,44 @@
 
       draw();
     })
+    window.onload = () => { 
+      draw();
+    }
 
-    window.onload = () => { draw(); }
+    const GamepadManager = new Input.GamepadManager();
+    let counter = 0;
+
+    const anim = () => 
+    {
+      requestAnimationFrame(anim);
+
+      if (GamepadManager.gamepadNum == 0) return;
+
+      counter -= 1;
+
+      if (0 < counter) return;
+
+      const pad = GamepadManager.getGamepad(0);
+
+      if (pad.buttons[12].pressed) {
+        state.position -= 20;
+      }
+      if (pad.buttons[13].pressed) {
+        state.position += 20;
+      }
+      if (pad.buttons[14].pressed) {
+        state.position -= 1;
+      }
+      if (pad.buttons[15].pressed) {
+        state.position += 1;
+      }
+
+      state.position = Math.max(0, state.position);
+      state.position = Math.min(SIZE * SIZE - 1, state.position);
+      draw();
+      counter = 2;
+    }
+    anim();
   </script>
 </body>
 </html>
