@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DivArt-pascal</title>
+  <script src="divart.js"></script>
+</head>
+<body>
+  <div id="canvas"></div>
+
+  <script>
+    const SIZE = 21;
+    const da = new DivArt("canvas", SIZE, SIZE);
+
+    // 階乗
+    const F = (n) => 
+    {
+      if (n == 0) return 1;
+
+      for(let i = n - 1; 0 < i; --i) {
+        n *= i;
+      }
+
+      return n;
+    }
+
+    // 順列 P
+    const P = (n, r) => 
+    {
+      let a = 1;
+
+      for(let i = 0; i < r; ++i) {
+        a *= (n - i);
+      }
+
+      return a;
+    }
+
+    // 組み合わせ
+    const C = (n, r) => {
+      return P(n, r) / F(r);
+    }
+
+    let timer = 0;
+    const c = Math.round(SIZE / 2) - 1; // 中心
+
+
+    const animate = () => 
+    {
+      requestAnimationFrame(animate);
+
+      for(let y = 0; y < SIZE; ++y) 
+      {
+        const n = y + 1;              // 項数
+        const bias = Math.floor(n/2); // 偏り
+        const s = c - bias;           // 左端
+        const e = s + n - 1;          // 右端
+
+        for(let x = 0; x < SIZE; ++x) 
+        {
+          const index = y * SIZE + x;
+
+          if (x < s || e < x) {
+            da.pixel(index, [1, 1, 1]);
+            continue;
+          }
+
+          if (C(y, x - s) % 2 == 1) {
+            da.pixel(index, [0, 0, 0]);
+          } else {
+            da.pixel(index, [
+              Math.abs(Math.sin(timer * y)),
+              Math.abs(Math.cos(timer * x * 0.1)), 
+              Math.abs(timer * Math.sin(x*y))  
+            ]);
+          }
+        }
+      }
+      timer += 0.01;
+    }
+    animate();
+    
+  </script>
+</body>
+</html>
